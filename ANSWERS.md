@@ -50,9 +50,6 @@ theoretical_scale_factor : 1.180841
 centroid_latitude        : 23.037829° N
 ```
 
-#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
-![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
-
 #### Explanation & CRS Analysis
 1. **Mathematical Match**: In the Web Mercator projection (EPSG:3857), linear coordinates are stretched by the secant of latitude, $k = \sec(\phi) = 1/\cos(\phi)$. Because area scales quadratically ($k^2$), the theoretical areal inflation factor at centroid latitude $\phi = 23.037829^\circ$ is:
    $$\frac{1}{\cos^2(23.037829^\circ)} = \frac{1}{(0.920272)^2} = \mathbf{1.180841}$$
@@ -136,9 +133,6 @@ Execution Time: 301.833 ms
 | **Index Condition** | None | `geom_utm && st_expand(s.geom_utm, 500)` | None |
 | **Pairs Evaluated** | 595,930 ($115 \times 5,182$) | Only BBOX-overlapping candidates | 595,930 ($115 \times 5,182$) |
 
-#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
-![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
-
 #### Explanation
 * **Why GiST Accelerates `ST_DWithin`**: PostGIS provides an internal query rewrite rule for `ST_DWithin(a, b, dist)`. It automatically generates the bounding box operator `a.geom && ST_Expand(b.geom, dist)`. The GiST R-tree index discards $>99\%$ of distant buildings in $O(\log N)$ time, evaluating exact boundary distances on only 366 candidates per loop rather than scanning all 5,182 buildings.
 * **Why `ST_Distance < 500` Fails to Use Index**: PostgreSQL evaluates `ST_Distance(a, b)` as an opaque scalar math function. The planner does not know that `< 500` implies bounding box containment. Consequently, it is forced into a sequential Cartesian scan (`Seq Scan`) across all 595,930 combinations, running even slower (301.83 ms) due to function call overhead.
@@ -179,9 +173,6 @@ Earlier Project Baseline Count (same BBOX): 108 healthcare facilities
 | **Sunflower Women's Endo Infertility Hospital**| Hospital | `23.045758, 72.541289` | Correct (Active) | Operational super-specialty fertility center on Drive-In Road. |
 | **May Flower Women's Hospital** | Hospital | `23.045577, 72.541905` | Correct (Active) | Established women's healthcare hospital, open and operating. |
 | **Sunflower Infertility Clinic** | Clinic | `23.045562, 72.541361` | Correct (Active) | Co-located sub-clinic in the Sunflower Hospital complex (within 16m). |
-
-#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
-![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
 
 #### Explanation
 * **Data Cleansing Discrepancy**: The raw OpenStreetMap extract yielded **115 unique facilities**, whereas the earlier project recorded **108**. The earlier script (`backend/import-osm.js`) contained a hardcoded filter `if (!name) continue;`, completely discarding unnamed clinics and pharmacies. Furthermore, raw OSM contained several duplicated nodes for multi-story hospital campuses which our deduplication pipeline collapsed into single points.
@@ -243,9 +234,6 @@ Earlier Project Baseline Count (same BBOX): 108 healthcare facilities
 | **File Transfer Size** | **26.4 KB** | **78.8 KB** (~3.0x larger payload) |
 | **First Point Coordinate Order**| `[72.5522734, 23.0456657]` | `<gml:pos>23.0456657 72.5522734</gml:pos>` |
 | **Coordinate Axis Interpretation**| **Longitude, Latitude** (RFC 7946) | **Latitude, Longitude** (OGC EPSG:4326) |
-
-#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
-![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
 
 #### Explanation
 * **Payload Efficiency**: GeoJSON transfers concise, key-value JSON objects readable natively by web browsers. GML 3.2 packages every feature in verbose XML namespaces (`xmlns:gml`, `xmlns:wfs`, `<gml:Point>`, `<gml:boundedBy>`), increasing network payloads by 300%.
@@ -348,8 +336,8 @@ IMAGE          CREATED        CREATED BY                                      SI
 <missing>      2 weeks ago    nginx:1.27-alpine base rootfs                   23.0 MB   
 ```
 
-#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
-![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
+#### Visual Comparison: Multi-Stage vs Single-Stage Build
+![Docker Image Size Comparison](study/images/docker_scenario2_multistage.png)
 
 #### Explanation
 * **Why Multi-Stage is 42x Smaller**: The single-stage build (`node:20` + Debian apt) retains heavy build dependencies, Node.js runtimes, package manager caches, and C/C++ compiler toolchains totaling **1.14 GB**. The multi-stage build discards the entire build environment after verification, copying only static assets into a minimal `nginx:alpine` runtime (**26.8 MB**). The largest layer is the base Alpine OS and compiled Nginx binary (~23.0 MB).
@@ -357,6 +345,9 @@ IMAGE          CREATED        CREATED BY                                      SI
 ---
 
 ### Evidence Question 11: Self-Healing and State in Kubernetes
+#### Kubernetes Self-Healing Verification
+![Kubernetes Self-Healing Pod Recovery](study/images/k8s_scenario1_selfhealing.png)
+
 #### Self-Healing Pod Recovery Timestamps (`kubectl get pods -w`)
 ```text
 $ kubectl delete pod postgis-0

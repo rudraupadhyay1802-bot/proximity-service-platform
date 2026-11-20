@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proximity — Ahmedabad Student Services</title>
+<title>Proximity — Ahmedabad Healthcare Finder</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -27,22 +27,22 @@
     </div>
 
     <h1 class="intro-title">PROXIMITY</h1>
-    <div class="intro-tagline">Ahmedabad Student Services</div>
+    <div class="intro-tagline">Ahmedabad Healthcare Finder</div>
 
-    <p class="intro-desc">Find colleges, hostels, PGs, food, study spaces, daily essentials, transport, healthcare and more around your college — all through one interactive map.</p>
+    <p class="intro-desc">Find hospitals, clinics, pharmacies, and health centres around your location in Navrangpura, Ahmedabad — powered by OpenStreetMap and PostGIS.</p>
 
     <div class="intro-flow">
-      <div class="flow-step"><span class="flow-num">01</span><span class="flow-label">Pick your college</span></div>
+      <div class="flow-step"><span class="flow-num">01</span><span class="flow-label">Set your location</span></div>
       <div class="flow-arrow">→</div>
       <div class="flow-step"><span class="flow-num">02</span><span class="flow-label">Set your range</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-num">03</span><span class="flow-label">Choose services</span></div>
+      <div class="flow-step"><span class="flow-num">03</span><span class="flow-label">Choose types</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-num">04</span><span class="flow-label">Explore the map</span></div>
+      <div class="flow-step"><span class="flow-num">04</span><span class="flow-label">Find healthcare</span></div>
     </div>
 
     <button id="enterAppBtn" class="btn-primary intro-cta">Start Exploring →</button>
-    <div class="intro-footnote">A student WebGIS project · Data via OpenStreetMap &amp; Overpass</div>
+    <div class="intro-footnote">WebGIS Assignment · Navrangpura Ward · 115 healthcare facilities · Data via OpenStreetMap &amp; PostGIS</div>
   </div>
 </div>
 
@@ -52,13 +52,13 @@
     <div class="brand">
       <div class="brand-eyebrow">Live · OpenStreetMap <span class="city-badge">Ahmedabad</span></div>
       <h1>Proximity</h1>
-      <div class="brand-tagline">Ahmedabad Student Services</div>
-      <p>Everything a student needs around their college — hostels, food, libraries, transport and more, mapped nearby.</p>
+      <div class="brand-tagline">Healthcare Accessibility · Navrangpura Ward</div>
+      <p>Find hospitals, clinics, pharmacies and health centres near you — mapped from 115 verified OSM features.</p>
     </div>
 
     <div class="scroll">
       <!-- Location -->
-      <div class="field-label" style="margin-top:22px;">01 · College / Location</div>
+      <div class="field-label" style="margin-top:22px;">01 · Your Location</div>
       <div class="search-row">
         <input type="text" id="searchInput" placeholder="e.g. LJ University, Navrangpura" autocomplete="off">
         <button class="btn-primary" id="searchBtn">Go</button>
@@ -69,7 +69,7 @@
         <input type="text" id="lonInput" placeholder="Longitude" inputmode="decimal" autocomplete="off">
         <button class="btn-ghost" id="latlonBtn">Set</button>
       </div>
-      <div class="hint">Search is scoped to Ahmedabad. Or <b>click anywhere on the map</b>, or use your <b id="liveLocBtn" style="cursor:pointer;text-decoration:underline;">live location</b>.</div>
+      <div class="hint">Search scoped to Ahmedabad. Or <b>click anywhere on the map</b>, or use your <b id="liveLocBtn" style="cursor:pointer;text-decoration:underline;">live location</b>.</div>
       <div id="searchStatus" class="status-line"></div>
 
       <!-- Explore mode -->
@@ -86,20 +86,20 @@
         </div>
 
         <div id="nearestModeBox" style="display:none;">
-          <div class="radius-display"><span id="nearestNVal">10</span><span>services</span></div>
+          <div class="radius-display"><span id="nearestNVal">10</span><span>facilities</span></div>
           <input type="range" id="nearestNSlider" min="1" max="50" step="1" value="10">
-          <div class="hint">Searches an expanding radius (up to <b>20 km</b>) until at least this many matches are found, across all selected types combined.</div>
+          <div class="hint">Finds the nearest N healthcare facilities by expanding the search radius up to <b>20 km</b>.</div>
         </div>
       </div>
 
-      <!-- What do you need -->
+      <!-- Healthcare type selector -->
       <div class="section">
-        <div class="field-label">03 · What Do You Need? <span id="catCount" style="color:var(--signal)"></span></div>
+        <div class="field-label">03 · Healthcare Types <span id="catCount" style="color:var(--signal)"></span></div>
         <div class="chip-grid" id="chipGrid"></div>
       </div>
 
       <!-- Run -->
-      <button class="run-btn btn-primary" id="runBtn" disabled>Find Services</button>
+      <button class="run-btn btn-primary" id="runBtn" disabled>Find Healthcare</button>
       <div id="runStatus" class="status-line"></div>
 
       <!-- Results -->
@@ -108,11 +108,10 @@
           <div class="field-label" style="margin:0;">04 · Results</div>
           <div class="results-count" id="resultsCount"></div>
         </div>
-        <div class="hint" style="margin-bottom:10px;">Click a result to see its route. "Budget" tags mean pricing is relevant here — OpenStreetMap doesn't provide real prices yet, so it's shown as not available.</div>
         <div id="resultsList">
           <div class="empty-state">
-            <div class="glyph">◎</div>
-            Pick your college or area and find services<br>to see nearby options here.
+            <div class="glyph">✚</div>
+            Set your location and find healthcare facilities<br>to see results here.
           </div>
         </div>
       </div>
@@ -121,9 +120,9 @@
         <div class="field-label">Data Source</div>
         <div class="mode-toggle">
           <button type="button" class="mode-btn active" id="sourceOverpassBtn">Live OSM</button>
-          <button type="button" class="mode-btn" id="sourceBackendBtn">Our Database</button>
+          <button type="button" class="mode-btn" id="sourceBackendBtn">Our PostGIS DB</button>
         </div>
-        <div class="hint" id="dataSourceHint">Live OSM queries OpenStreetMap directly — full Ahmedabad coverage. Our Database uses our own PostGIS backend — currently central Ahmedabad only, 10 service types.</div>
+        <div class="hint" id="dataSourceHint">Live OSM queries OpenStreetMap directly. Our PostGIS DB uses the local PostGIS backend with 115 verified Navrangpura healthcare facilities.</div>
         <div id="dataSourceStatus" class="status-line"></div>
       </div>
     </div>
@@ -133,7 +132,7 @@
   <div id="mapWrap">
     <button id="sidebarToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
     <div id="map"></div>
-    <div id="cityTag">AHMEDABAD · INDIA</div>
+    <div id="cityTag">AHMEDABAD · NAVRANGPURA</div>
     <div class="coord-readout" id="coordReadout">
       <span class="lbl">POINT</span>—
     </div>
@@ -146,5 +145,6 @@
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 
 <script src="script.js"></script>
+<script src="intro.js"></script>
 </body>
 </html>
