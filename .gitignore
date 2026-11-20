@@ -1,0 +1,21 @@
+# Environments and secrets
+.env
+backend/.env
+*.env
+
+# Dependencies & Python venv
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# GeoServer / Docker persistent data
+geoserver_data/
+pgdata/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

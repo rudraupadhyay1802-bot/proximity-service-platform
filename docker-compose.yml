@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgis:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: webgis_postgis
+    environment:
+      POSTGRES_DB: ${DB_NAME:-proximity}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    networks:
+      - webgis_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-proximity}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  geoserver:
+    image: kartoza/geoserver:2.24.1
+    container_name: webgis_geoserver
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-geoserver}
+      INITIAL_MEMORY: "1G"
+      MAXIMUM_MEMORY: "2G"
+    ports:
+      - "8080:8080"
+    volumes:
+      - geoserver_data:/opt/geoserver/data_dir
+    networks:
+      - webgis_network
+
+  pg_tileserv:
+    image: pramsey/pg_tileserv:latest
+    container_name: webgis_pg_tileserv
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgis:5432/${DB_NAME:-proximity}
+      TS_PORT: 7800
+    ports:
+      - "7800:7800"
+    networks:
+      - webgis_network
+
+  pg_featureserv:
+    image: pramsey/pg_featureserv:latest
+    container_name: webgis_pg_featureserv
+    depends_on:
+      postgis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgis:5432/${DB_NAME:-proximity}
+      PGFS_PORT: 9000
+    ports:
+      - "9000:9000"
+    networks:
+      - webgis_network
+
+networks:
+  webgis_network:
+    name: webgis_network
+    driver: bridge
+
+volumes:
+  pgdata:
+  geoserver_data:
