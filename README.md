@@ -1,5 +1,5 @@
 # Ahmedabad Healthcare Accessibility WebGIS Platform
-### Public Serverless Map URL: [https://rudra-1025.github.io/proximity-service-platform/](https://rudra-1025.github.io/proximity-service-platform/)
+### Public Serverless Map URL: [https://rudraupadhyay1802-bot.github.io/proximity-service-platform/](https://rudraupadhyay1802-bot.github.io/proximity-service-platform/)
 
 ---
 
@@ -76,7 +76,7 @@ This project rebuilds an earlier local nearby-services prototype into a professi
 ### Step 1: Environment Setup
 ```bash
 # Clone the repository
-git clone https://github.com/Rudra-1025/proximity-service-platform.git
+git clone https://github.com/rudraupadhyay1802-bot/proximity-service-platform.git
 cd proximity-service-platform
 
 # Create virtual environment and install dependencies
