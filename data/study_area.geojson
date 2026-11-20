@@ -1,0 +1,32 @@
+{
+  "type": "FeatureCollection",
+  "name": "navrangpura_study_area",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Navrangpura Ward",
+        "city": "Ahmedabad",
+        "zone": "West Zone",
+        "type": "Urban Ward",
+        "state": "Gujarat",
+        "country": "India"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [72.5400, 23.0180],
+            [72.5750, 23.0180],
+            [72.5820, 23.0380],
+            [72.5780, 23.0580],
+            [72.5450, 23.0580],
+            [72.5380, 23.0380],
+            [72.5400, 23.0180]
+          ]
+        ]
+      }
+    }
+  ]
+}
