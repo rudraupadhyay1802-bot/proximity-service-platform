@@ -19,3 +19,5 @@ pgdata/
 Thumbs.db
 .vscode/
 .idea/
+
+*.zip
