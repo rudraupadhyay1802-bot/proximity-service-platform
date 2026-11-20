@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proximity — Ahmedabad Student Services</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ INTRO / LANDING SCREEN ============ -->
+<div id="introScreen">
+  <div class="intro-bg">
+    <div class="radar-ring r1"></div>
+    <div class="radar-ring r2"></div>
+    <div class="radar-ring r3"></div>
+  </div>
+
+  <div class="intro-content">
+    <div class="intro-eyebrow">
+      <span class="live-dot"></span> Live Data <span class="eyebrow-sep">·</span> OpenStreetMap <span class="eyebrow-sep">·</span> <span class="city-badge">Ahmedabad</span>
+    </div>
+
+    <h1 class="intro-title">PROXIMITY</h1>
+    <div class="intro-tagline">Ahmedabad Student Services</div>
+
+    <p class="intro-desc">Find colleges, hostels, PGs, food, study spaces, daily essentials, transport, healthcare and more around your college — all through one interactive map.</p>
+
+    <div class="intro-flow">
+      <div class="flow-step"><span class="flow-num">01</span><span class="flow-label">Pick your college</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-num">02</span><span class="flow-label">Set your range</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-num">03</span><span class="flow-label">Choose services</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-num">04</span><span class="flow-label">Explore the map</span></div>
+    </div>
+
+    <button id="enterAppBtn" class="btn-primary intro-cta">Start Exploring →</button>
+    <div class="intro-footnote">A student WebGIS project · Data via OpenStreetMap &amp; Overpass</div>
+  </div>
+</div>
+
+<div id="app">
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="brand-eyebrow">Live · OpenStreetMap <span class="city-badge">Ahmedabad</span></div>
+      <h1>Proximity</h1>
+      <div class="brand-tagline">Ahmedabad Student Services</div>
+      <p>Everything a student needs around their college — hostels, food, libraries, transport and more, mapped nearby.</p>
+    </div>
+
+    <div class="scroll">
+      <!-- Location -->
+      <div class="field-label" style="margin-top:22px;">01 · College / Location</div>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="e.g. LJ University, Navrangpura" autocomplete="off">
+        <button class="btn-primary" id="searchBtn">Go</button>
+      </div>
+      <div id="suggestBox" class="suggest-box"></div>
+      <div class="latlon-row">
+        <input type="text" id="latInput" placeholder="Latitude" inputmode="decimal" autocomplete="off">
+        <input type="text" id="lonInput" placeholder="Longitude" inputmode="decimal" autocomplete="off">
+        <button class="btn-ghost" id="latlonBtn">Set</button>
+      </div>
+      <div class="hint">Search is scoped to Ahmedabad. Or <b>click anywhere on the map</b>, or use your <b id="liveLocBtn" style="cursor:pointer;text-decoration:underline;">live location</b>.</div>
+      <div id="searchStatus" class="status-line"></div>
+
+      <!-- Explore mode -->
+      <div class="section">
+        <div class="field-label">02 · Explore Mode</div>
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn active" id="modeRadiusBtn">Explore Within</button>
+          <button type="button" class="mode-btn" id="modeNearestBtn">Nearest N</button>
+        </div>
+
+        <div id="radiusModeBox">
+          <div class="radius-display"><span id="radiusVal">2</span><span>km</span></div>
+          <input type="range" id="radiusSlider" min="0.5" max="10" step="0.5" value="2">
+        </div>
+
+        <div id="nearestModeBox" style="display:none;">
+          <div class="radius-display"><span id="nearestNVal">10</span><span>services</span></div>
+          <input type="range" id="nearestNSlider" min="1" max="50" step="1" value="10">
+          <div class="hint">Searches an expanding radius (up to <b>20 km</b>) until at least this many matches are found, across all selected types combined.</div>
+        </div>
+      </div>
+
+      <!-- What do you need -->
+      <div class="section">
+        <div class="field-label">03 · What Do You Need? <span id="catCount" style="color:var(--signal)"></span></div>
+        <div class="chip-grid" id="chipGrid"></div>
+      </div>
+
+      <!-- Run -->
+      <button class="run-btn btn-primary" id="runBtn" disabled>Find Services</button>
+      <div id="runStatus" class="status-line"></div>
+
+      <!-- Results -->
+      <div class="section">
+        <div class="results-header">
+          <div class="field-label" style="margin:0;">04 · Results</div>
+          <div class="results-count" id="resultsCount"></div>
+        </div>
+        <div class="hint" style="margin-bottom:10px;">Click a result to see its route. "Budget" tags mean pricing is relevant here — OpenStreetMap doesn't provide real prices yet, so it's shown as not available.</div>
+        <div id="resultsList">
+          <div class="empty-state">
+            <div class="glyph">◎</div>
+            Pick your college or area and find services<br>to see nearby options here.
+          </div>
+        </div>
+      </div>
+
+      <div class="section" id="dataSourceSection">
+        <div class="field-label">Data Source</div>
+        <div class="mode-toggle">
+          <button type="button" class="mode-btn active" id="sourceOverpassBtn">Live OSM</button>
+          <button type="button" class="mode-btn" id="sourceBackendBtn">Our Database</button>
+        </div>
+        <div class="hint" id="dataSourceHint">Live OSM queries OpenStreetMap directly — full Ahmedabad coverage. Our Database uses our own PostGIS backend — currently central Ahmedabad only, 10 service types.</div>
+        <div id="dataSourceStatus" class="status-line"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ MAP ============ -->
+  <div id="mapWrap">
+    <button id="sidebarToggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div id="map"></div>
+    <div id="cityTag">AHMEDABAD · INDIA</div>
+    <div class="coord-readout" id="coordReadout">
+      <span class="lbl">POINT</span>—
+    </div>
+    <div class="map-legend" id="mapLegend"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
+<script src="script.js"></script>
+</body>
+</html>
