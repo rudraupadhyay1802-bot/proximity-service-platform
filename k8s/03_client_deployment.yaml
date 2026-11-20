@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webgis-client
+  namespace: default
+  labels:
+    app: webgis-client
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: webgis-client
+  template:
+    metadata:
+      labels:
+        app: webgis-client
+    spec:
+      containers:
+        - name: client
+          image: webgis-client:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webgis-client-service
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      name: http
+  selector:
+    app: webgis-client
