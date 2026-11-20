@@ -10,7 +10,7 @@
 * **OSM Feature Count**: **115 unique verified healthcare features** (Baseline exceeded: $\ge 15$)
 * **UTM Zone & EPSG Code**: **UTM Zone 43N (EPSG:32643)** (Area longitude: $72.564^\circ\text{ E}$)
 * **Walking Speed & Threshold**: Urban area standard $\rightarrow$ **15 minutes ($1.2\text{ km} = 1200\text{ m}$ at $4.8\text{ km/h}$)**; Vulnerable/Elderly $\rightarrow$ **15 minutes ($0.9\text{ km} = 900\text{ m}$ at $3.6\text{ km/h}$)**
-* **Public Deployment URL**: `https://<github-username>.github.io/proximity-service-platform/`
+* **Public Deployment URL**: `https://rudra-1025.github.io/proximity-service-platform/`
 * **Earlier Nearby-Services Repo Baseline**: `https://github.com/Rudra-1025/proximity-service-platform`
 
 ### Setup Checkpoint
