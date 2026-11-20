@@ -13,6 +13,9 @@
 * **Public Deployment URL**: `https://<github-username>.github.io/proximity-service-platform/`
 * **Earlier Nearby-Services Repo Baseline**: `https://github.com/Rudra-1025/proximity-service-platform`
 
+### Setup Checkpoint
+![Setup Checkpoint (4 Healthy Containers & GeoServer Admin)](study/images/setup_checkpoint_containers.png)
+
 ---
 
 ## Phase 1 — From API Data to Your Own Database
@@ -46,6 +49,9 @@ ratio_3857_to_utm        : 1.185482
 theoretical_scale_factor : 1.180841
 centroid_latitude        : 23.037829° N
 ```
+
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
 
 #### Explanation & CRS Analysis
 1. **Mathematical Match**: In the Web Mercator projection (EPSG:3857), linear coordinates are stretched by the secant of latitude, $k = \sec(\phi) = 1/\cos(\phi)$. Because area scales quadratically ($k^2$), the theoretical areal inflation factor at centroid latitude $\phi = 23.037829^\circ$ is:
@@ -130,6 +136,9 @@ Execution Time: 301.833 ms
 | **Index Condition** | None | `geom_utm && st_expand(s.geom_utm, 500)` | None |
 | **Pairs Evaluated** | 595,930 ($115 \times 5,182$) | Only BBOX-overlapping candidates | 595,930 ($115 \times 5,182$) |
 
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
+
 #### Explanation
 * **Why GiST Accelerates `ST_DWithin`**: PostGIS provides an internal query rewrite rule for `ST_DWithin(a, b, dist)`. It automatically generates the bounding box operator `a.geom && ST_Expand(b.geom, dist)`. The GiST R-tree index discards $>99\%$ of distant buildings in $O(\log N)$ time, evaluating exact boundary distances on only 366 candidates per loop rather than scanning all 5,182 buildings.
 * **Why `ST_Distance < 500` Fails to Use Index**: PostgreSQL evaluates `ST_Distance(a, b)` as an opaque scalar math function. The planner does not know that `< 500` implies bounding box containment. Consequently, it is forced into a sequential Cartesian scan (`Seq Scan`) across all 595,930 combinations, running even slower (301.83 ms) due to function call overhead.
@@ -171,6 +180,9 @@ Earlier Project Baseline Count (same BBOX): 108 healthcare facilities
 | **May Flower Women's Hospital** | Hospital | `23.045577, 72.541905` | Correct (Active) | Established women's healthcare hospital, open and operating. |
 | **Sunflower Infertility Clinic** | Clinic | `23.045562, 72.541361` | Correct (Active) | Co-located sub-clinic in the Sunflower Hospital complex (within 16m). |
 
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
+
 #### Explanation
 * **Data Cleansing Discrepancy**: The raw OpenStreetMap extract yielded **115 unique facilities**, whereas the earlier project recorded **108**. The earlier script (`backend/import-osm.js`) contained a hardcoded filter `if (!name) continue;`, completely discarding unnamed clinics and pharmacies. Furthermore, raw OSM contained several duplicated nodes for multi-story hospital campuses which our deduplication pipeline collapsed into single points.
 * **Spatial Clustering (26 pairs within 25m)**: Highly specialized healthcare in Indian cities clusters along medical corridors (e.g., Stadium Road, Drive-In Road). Pairs within 25m reflect adjacent specialized diagnostic units, pharmacies, and distinct hospital annexes sharing a single physical plot.
@@ -204,6 +216,9 @@ Earlier Project Baseline Count (same BBOX): 108 healthcare facilities
    ```
    *Result*: **HTTP 200 OK (Blank Map)** — Delivers a transparent image with zero features rendered.
 
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
+
 #### Explanation
 * **Standard Difference**: WMS 1.1.1 mandates that `EPSG:4326` coordinates follow standard Cartesian order $(X, Y) = (\text{Longitude}, \text{Latitude})$. Thus, the bounding box was parsed as $(\text{minLon}=72.540, \text{minLat}=23.018)$.
 * In contrast, the OGC revised WMS 1.3.0 to comply with ISO 19111 geodetic standards, enforcing the official EPSG registry definition for EPSG:4326: **Axis 1 is Latitude (Northing)** and **Axis 2 is Longitude (Easting)**. WMS 1.3.0 interpreted the first number `72.540` as Latitude ($72.54^\circ\text{ N}$, near the Arctic Circle in northern Norway/Svalbard) and `23.018` as Longitude ($23.018^\circ\text{ E}$). Because no Ahmedabad features exist near the North Pole, GeoServer returned an empty tile. To fix this in WMS 1.3.0, the BBOX must be transposed to `BBOX=23.018,72.540,23.058,72.582`.
@@ -229,6 +244,9 @@ Earlier Project Baseline Count (same BBOX): 108 healthcare facilities
 | **First Point Coordinate Order**| `[72.5522734, 23.0456657]` | `<gml:pos>23.0456657 72.5522734</gml:pos>` |
 | **Coordinate Axis Interpretation**| **Longitude, Latitude** (RFC 7946) | **Latitude, Longitude** (OGC EPSG:4326) |
 
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
+
 #### Explanation
 * **Payload Efficiency**: GeoJSON transfers concise, key-value JSON objects readable natively by web browsers. GML 3.2 packages every feature in verbose XML namespaces (`xmlns:gml`, `xmlns:wfs`, `<gml:Point>`, `<gml:boundedBy>`), increasing network payloads by 300%.
 * **Axis Ordering**: RFC 7946 strictly standardizes GeoJSON coordinate arrays as `[longitude, latitude, elevation]`. In contrast, GML 3.2 complies strictly with the OGC/EPSG axis registry for EPSG:4326, outputting Latitude (Northing) first.
@@ -247,6 +265,8 @@ Evaluated 30 pseudo-random points distributed uniformly across Navrangpura Ward.
 * **Maximum Network-to-Straight Ratio**: **5.884** (Point #9).
 
 #### Worst-Case Analysis (Point #9)
+![Q6 Worst Case Detour & Barrier Map](data/images/q6_worst_case_barrier.png)
+
 * **Point Location**: Near Ashram Road / Sabarmati Riverfront corridor ($72.5768^\circ\text{ E}, 23.0312^\circ\text{ N}$).
 * **Straight-Line Nearest**: *Dr. Dilip Modi Hospital* — Distance: **135.40 m**.
 * **Network Walking Nearest**: *Dr. Dilip Modi Hospital* — Real Walking Distance: **796.69 m** (Detour Ratio: **5.884**).
@@ -327,6 +347,9 @@ IMAGE          CREATED        CREATED BY                                      SI
 <missing>      2 minutes ago  RUN /bin/sh -c rm -rf /usr/share/nginx/html/…   0 B       buildkit.dockerfile.v0
 <missing>      2 weeks ago    nginx:1.27-alpine base rootfs                   23.0 MB   
 ```
+
+#### Visual Comparison (WMS 1.1.1 vs WMS 1.3.0)
+![WMS 1.1.1 vs 1.3.0 Axis Order Trap](data/images/q4_wms_axis_order.png)
 
 #### Explanation
 * **Why Multi-Stage is 42x Smaller**: The single-stage build (`node:20` + Debian apt) retains heavy build dependencies, Node.js runtimes, package manager caches, and C/C++ compiler toolchains totaling **1.14 GB**. The multi-stage build discards the entire build environment after verification, copying only static assets into a minimal `nginx:alpine` runtime (**26.8 MB**). The largest layer is the base Alpine OS and compiled Nginx binary (~23.0 MB).

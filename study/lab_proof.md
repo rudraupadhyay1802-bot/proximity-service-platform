@@ -13,6 +13,8 @@ This document verifies the completion of hands-on container and Kubernetes labs 
   * Simulated a node failure / pod crash by deleting the pod (`kubectl delete pod <pod-name>`).
   * Verified that the StatefulSet controller automatically rescheduled the pod and re-attached the same persistent volume, retaining 100% of the database records without loss.
 
+![Kubernetes Self Healing](images/k8s_scenario1_selfhealing.png)
+
 ```
 $ kubectl get pods -w
 NAME         READY   STATUS              RESTARTS   AGE
@@ -34,3 +36,10 @@ postgres-0   1/1     Running             0          3s
 * **Key Demonstration**:
   * Created a multi-tier Compose stack containing PostgreSQL, GeoServer, pg_tileserv, and an Nginx client on a shared bridge network.
   * Demonstrated internal DNS resolution where services discover each other by container name (e.g., `postgis:5432`) without hardcoding host IP addresses.
+
+![Docker Multi-Stage Optimization](images/docker_scenario2_multistage.png)
+
+---
+
+## Setup Checkpoint: 4 Healthy Containers & GeoServer Console
+![Setup Checkpoint Containers](images/setup_checkpoint_containers.png)
