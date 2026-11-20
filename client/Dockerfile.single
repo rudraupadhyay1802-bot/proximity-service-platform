@@ -1,0 +1,16 @@
+# ============================================================
+# Single-stage Dockerfile (Full Base Image for Size Comparison - Q10)
+# ============================================================
+FROM node:20
+
+WORKDIR /usr/share/nginx/html
+
+# Install full nginx on Debian/Ubuntu base
+RUN apt-get update && apt-get install -y nginx && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+COPY nginx.conf /etc/nginx/sites-available/default
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ahmedabad Healthcare Accessibility | WebGIS Deployment</title>
+  
+  <!-- MapLibre GL JS -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  
+  <!-- PMTiles MapLibre Protocol Adapter -->
+  <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header / Nav -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="live-pulse"></span>
+      <span class="brand-title">Ahmedabad WebGIS</span>
+      <span class="brand-tag">Navrangpura Ward · Healthcare Accessibility</span>
+    </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <span class="stat-value" id="statServices">115</span>
+        <span class="stat-label">Services</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="statUnservedAdult">1.3%</span>
+        <span class="stat-label">Unserved (Adult)</span>
+      </div>
+      <div class="stat-item alert">
+        <span class="stat-value" id="statUnservedElderly">7.2%</span>
+        <span class="stat-label">Unserved (Elderly)</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">+5.9 pp</span>
+        <span class="stat-label">Mobility Disparity</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- Map Canvas -->
+    <div id="map"></div>
+
+    <!-- Floating Control Panel -->
+    <aside class="control-panel">
+      <div class="panel-section">
+        <h3>Analysis Mode</h3>
+        <div class="toggle-group">
+          <button class="btn-toggle active" id="modeAdultBtn">Standard Adult (4.8 km/h)</button>
+          <button class="btn-toggle" id="modeElderlyBtn">Vulnerable / Elderly (3.6 km/h)</button>
+        </div>
+      </div>
+
+      <div class="panel-section">
+        <h3>Map Layers</h3>
+        <label class="layer-checkbox">
+          <input type="checkbox" id="chkHexagons" checked>
+          <span>H3 Accessibility Grid (Res 9)</span>
+        </label>
+        <label class="layer-checkbox">
+          <input type="checkbox" id="chkServices" checked>
+          <span>Healthcare Facilities (115 points)</span>
+        </label>
+        <label class="layer-checkbox">
+          <input type="checkbox" id="chkStudyArea" checked>
+          <span>Ward Study Boundary</span>
+        </label>
+        <label class="layer-checkbox">
+          <input type="checkbox" id="chkWmsDem">
+          <span>SRTM / DEM Elevation (WMS)</span>
+        </label>
+      </div>
+
+      <div class="panel-section highlight-box">
+        <h3>Performance Benchmark (Q9)</h3>
+        <p class="desc">Toggle all 5,182 building footprints to measure WFS GeoJSON vs MVT vs WMS payload:</p>
+        <button class="btn-primary" id="btnToggleBuildings">Load Buildings (WFS GeoJSON)</button>
+        <div id="perfStatus" class="perf-status">Status: Off (0 KB)</div>
+      </div>
+
+      <div class="panel-section legend">
+        <h3>Legend</h3>
+        <div class="legend-row">
+          <span class="legend-color color-green"></span>
+          <span>&lt; 600m (&lt; 7.5 min walk) - High Access</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-color color-yellow"></span>
+          <span>600m – 1200m (7.5–15 min) - Moderate</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-color color-red"></span>
+          <span>&gt; 1200m (&gt; 15 min walk) - Underserved</span>
+        </div>
+        <div class="legend-row" style="margin-top: 8px;">
+          <span class="legend-symbol symbol-hospital">●</span>
+          <span>Healthcare Facility (Click for details)</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
