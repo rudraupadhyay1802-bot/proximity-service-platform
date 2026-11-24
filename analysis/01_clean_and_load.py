@@ -9,12 +9,12 @@ import xml.etree.ElementTree as ET
 import json
 import os
 import psycopg2
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values # type: ignore
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString
 import geopandas as gpd
 import pandas as pd
 from shapely.ops import transform
-import pyproj
+import pyproj # type: ignore
 
 # Connect to database
 DB_PARAMS = {
