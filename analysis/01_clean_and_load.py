@@ -7,6 +7,7 @@ reprojections, and loads layers into PostgreSQL/PostGIS.
 
 import xml.etree.ElementTree as ET
 import json
+import os
 import psycopg2
 from psycopg2.extras import execute_values
 from shapely.geometry import Point, Polygon, MultiPolygon, LineString
@@ -19,7 +20,7 @@ import pyproj
 DB_PARAMS = {
     'dbname': 'proximity',
     'user': 'postgres',
-    'password': 'Rudra@1234',
+    'password': os.environ['DB_PASSWORD'],
     'host': 'localhost',
     'port': 5432
 }

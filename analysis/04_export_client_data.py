@@ -16,7 +16,7 @@ import geopandas as gpd
 DB_PARAMS = {
     'dbname': 'proximity',
     'user': 'postgres',
-    'password': 'Rudra@1234',
+    'password': os.environ['DB_PASSWORD'],
     'host': 'localhost',
     'port': 5432
 }
