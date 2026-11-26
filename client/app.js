@@ -240,14 +240,14 @@ document.getElementById('modeElderlyBtn').addEventListener('click', () => {
   ]);
 });
 
-// Performance Benchmark: Load all 5,182 buildings as WFS GeoJSON
+// Performance Benchmark: Load all 20,607 buildings as WFS GeoJSON
 let buildingsLoaded = false;
 document.getElementById('btnToggleBuildings').addEventListener('click', async () => {
   const btn = document.getElementById('btnToggleBuildings');
   const statusEl = document.getElementById('perfStatus');
 
   if (!buildingsLoaded) {
-    statusEl.innerText = 'Requesting WFS GeoJSON (5,182 buildings)...';
+    statusEl.innerText = 'Requesting WFS GeoJSON (20,607 buildings)...';
     const t0 = performance.now();
 
     try {
