@@ -81,14 +81,15 @@ map.on('load', async () => {
 
   // 3. Hex Accessibility Grid (Res 9)
   map.addSource('hex-grid', {
-    type: 'geojson',
-    data: 'data/hex_access_res9.geojson'
+    type: 'vector',
+    url: 'pmtiles://data/proximity_tiles.pmtiles'
   });
 
   map.addLayer({
     id: 'hex-fill',
     type: 'fill',
     source: 'hex-grid',
+    'source-layer': 'hex',
     paint: {
       'fill-color': [
         'step',
@@ -105,6 +106,7 @@ map.on('load', async () => {
     id: 'hex-line',
     type: 'line',
     source: 'hex-grid',
+    'source-layer': 'hex',
     paint: {
       'line-color': '#0f172a',
       'line-width': 0.5,
@@ -114,14 +116,15 @@ map.on('load', async () => {
 
   // 4. Healthcare Services Points
   map.addSource('services', {
-    type: 'geojson',
-    data: 'data/services.geojson'
+    type: 'vector',
+    url: 'pmtiles://data/proximity_tiles.pmtiles'
   });
 
   map.addLayer({
     id: 'services-points',
     type: 'circle',
     source: 'services',
+    'source-layer': 'services',
     paint: {
       'circle-radius': 6.5,
       'circle-color': '#e63946',
