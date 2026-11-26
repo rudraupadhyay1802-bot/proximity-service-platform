@@ -1,169 +1,164 @@
-# Ahmedabad Healthcare Accessibility WebGIS Platform
-### Public Serverless Map URL: [https://rudraupadhyay1802-bot.github.io/proximity-service-platform/](https://rudraupadhyay1802-bot.github.io/proximity-service-platform/)
+# Ahmedabad Healthcare Accessibility WebGIS
+### Public map (static, GitHub Pages): [https://rudraupadhyay1802-bot.github.io/proximity-service-platform/](https://rudraupadhyay1802-bot.github.io/proximity-service-platform/)
 
 ---
 
 ## 1. Project Overview
-This project rebuilds an earlier local nearby-services prototype into a professional, containerized, and deployed Web GIS. It answers a crucial urban public-health planning question:
-> **Which residents of Navrangpura Ward (Ahmedabad) cannot reach a healthcare facility on foot within a reasonable walking time (15 minutes), and why?**
+This project rebuilds an earlier local nearby-services prototype into a Web GIS backed by PostGIS. It asks a public-health planning question:
+> **Which residents of the study area (a hand-drawn polygon approximating Navrangpura Ward, Ahmedabad) cannot walk to a healthcare facility within 15 minutes, and where are they?**
 
-### Key System Specifications
-* **Study Area**: Navrangpura Ward, West Zone, Ahmedabad, Gujarat, India (~17.72 km²).
-* **Service Analyzed**: Healthcare facilities (`hospital`, `clinic`, `pharmacy`, `healthcare=*`) — 115 deduplicated, ground-truth-verified locations.
-* **Coordinate Systems**:
-  * Ingestion & GPS: **WGS 84 (EPSG:4326)**
-  * Projected Metric Distance & Area: **UTM Zone 43N (EPSG:32643)**
-  * Web Slippy Map: **Spherical Mercator (EPSG:3857)**
-* **Network Analysis**: Dijkstra shortest paths over the complete 10,425-node walkable street network extracted from OpenStreetMap.
-* **Spatial Aggregation**: H3 Hexagonal Global Discrete Grid System (Resolutions 8 & 9) with building footprint area (~5,182 buildings) as population proxy.
-* **Disparity Mode**: Evaluates standard adult walking ($4.8\text{ km/h} \rightarrow 1200\text{ m}$) vs vulnerable/elderly walkers ($3.6\text{ km/h} \rightarrow 900\text{ m}$).
+### Key Facts
+* **Study area**: hand-drawn polygon, 17.72 km², approximating Navrangpura Ward, West Zone, Ahmedabad. It is not an official boundary.
+* **Services analysed**: 345 healthcare features from OpenStreetMap (`hospital`, `clinic`, `pharmacy`, `healthcare=*`).
+* **Buildings**: 20,607 footprints. **Walking network**: 7,607 OSM ways → a graph of 35,008 nodes and 38,916 edges.
+* **Coordinate systems**: WGS 84 (EPSG:4326) for storage and GPS, UTM Zone 43N (EPSG:32643) for distances and areas, Web Mercator (EPSG:3857) for display only.
+* **Network analysis**: one multi-source Dijkstra search (NetworkX) from all services at once gives the street-network distance from every road node to its nearest service.
+* **Aggregation**: H3 hexagons at resolutions 8 (28 cells) and 9 (179 cells). Population is a proxy: building footprint area × 0.04 persons per m², counting all building types.
+* **Thresholds**: adults 4.8 km/h → 1200 m in 15 min; elderly 3.6 km/h → 900 m in 15 min.
+
+### Main Findings (from `analysis/03_isochrones_and_h3.py`)
+* A straight-line 1200 m buffer says 0.00% of the estimated population is unserved. By street network, **2.10%** is.
+* For the elderly threshold (900 m), **6.48%** is unserved, 4.38 percentage points more than for adults.
+* In 9 of 30 random points (30%), the nearest service on foot is not the nearest in a straight line. The median walking route is 1.71× the straight-line distance.
+* The unserved share depends on the grid: 0.0% for the ward as one unit, 7.95% at H3 resolution 8, 2.10% at resolution 9.
+
+Details, caveats and the questions I could not run are in [`ANSWERS.md`](ANSWERS.md).
+
+### Status
+| Part | Status |
+| :--- | :--- |
+| OSM download, cleaning, PostGIS load | Done and run |
+| Network analysis, H3 aggregation, Q6–Q8 | Done and run |
+| SQL evidence (Q1–Q3) | Done and run |
+| Static map client (MapLibre) | Included |
+| Docker Compose stack, GeoServer, WMS/WFS (Q4, Q5) | Files included, **not run** |
+| Docker image builds (Q10) | Dockerfiles included, **not built** |
+| Kubernetes manifests (Q11) | Included, **not applied** |
+| Browser performance measurements (Q9, Q12) | **Not measured** |
 
 ---
 
 ## 2. Repository Layout
 ```text
 .
-├── README.md                     # Public URL, quickstart, architecture, debugging log
-├── ANSWERS.md                    # Evidence questions Q1–Q12 with reproducible SQL and outputs
-├── docker-compose.yml            # Multi-service stack: PostGIS, GeoServer, pg_tileserv, pg_featureserv
-├── .env.example                  # Environment template (variable names only, no secrets)
-├── .gitignore                    # Prevents credentials, caches, and large binary tracking
-├── study/                        # Phase 0 conceptual guides + diagrams + lab proofs
-│   ├── S1_ogc_services_and_crs.md
-│   ├── S2_tiles_and_indexes.md
-│   ├── S3_measuring_access.md
-│   ├── S4_docker_and_kubernetes.md
-│   └── lab_proof.md
-├── sql/                          # Executable spatial SQL scripts
-│   ├── 01_create_tables.sql
-│   ├── 02_q1_area_comparisons.sql
-│   ├── 03_q2_indexing_and_explain.sql
-│   ├── 04_q3_data_quality.sql
-│   └── 05_hex_coverage.sql
-├── sld/                          # OGC Style Layer Descriptor
-│   └── services_rules.sld
-├── analysis/                     # Data processing & analytics scripts
-│   ├── 01_clean_and_load.py
+├── README.md
+├── ANSWERS.md                    # Evidence questions Q1–Q12, with limitations
+├── docker-compose.yml            # PostGIS, GeoServer, pg_tileserv, pg_featureserv (not run)
+├── .env.example                  # Variable names only, no secrets
+├── .gitignore
+├── backend/                      # Earlier Node/Express prototype (kept for comparison)
+├── study/                        # Concept notes (S1–S4)
+├── sql/                          # Spatial SQL for the evidence questions
+├── sld/                          # Style Layer Descriptor
+├── analysis/
+│   ├── 00_download_osm.py        # Downloads OSM data in 16 tiles (API node limit)
+│   ├── 00b_merge_osm.py          # Merges the tiles into data/raw_osm_buffered.osm
+│   ├── 01_clean_and_load.py      # Parses OSM, cleans, loads PostGIS
 │   ├── 02_dem_generator.py
-│   ├── 03_isochrones_and_h3.py
-│   └── 04_export_client_data.py
-├── client/                       # Interactive MapLibre GL JS client
-│   ├── index.html
-│   ├── app.js
-│   ├── style.css
-│   ├── nginx.conf
-│   ├── Dockerfile
-│   ├── Dockerfile.single
-│   └── data/
-├── k8s/                          # Production Kubernetes manifests
-│   ├── 01_secrets.yaml
-│   ├── 02_postgis_statefulset.yaml
-│   ├── 03_client_deployment.yaml
-│   └── 04_k8s_emptydir_test.yaml
-└── .github/workflows/            # CI/CD automation
-    └── deploy.yml
+│   ├── 03_isochrones_and_h3.py   # Network distances, H3 cells, Q6–Q8
+│   ├── 04_export_client_data.py  # Exports GeoJSON for the web client
+│   └── 05_build_pmtiles.py
+├── client/                       # MapLibre GL JS client, Dockerfiles, nginx.conf
+├── k8s/                          # Kubernetes manifests (not applied)
+└── .github/workflows/deploy.yml  # GitHub Pages deployment
 ```
 
 ---
 
-## 3. Local Setup & Reproduction
+## 3. Reproducing the Analysis
 
 ### Prerequisites
-* Python 3.11+ / `uv`
-* PostgreSQL 16+ with PostGIS 3+ (or Docker)
-* Node.js 18+ (optional for legacy backend)
+* Python 3.11+
+* PostgreSQL with PostGIS (the analysis was run on PostgreSQL 17 on Windows)
 
-### Step 1: Environment Setup
+### Step 1: Environment
 ```bash
-# Clone the repository
 git clone https://github.com/rudraupadhyay1802-bot/proximity-service-platform.git
 cd proximity-service-platform
-
-# Create virtual environment and install dependencies
-uv venv .venv
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
-# source .venv/bin/activate
-
-uv pip install geopandas osmnx shapely networkx h3 rasterio pyproj psycopg2-binary sqlalchemy geoalchemy2 pmtiles
+python -m venv .venv
+# Windows:  .venv\Scripts\activate        Linux/macOS:  source .venv/bin/activate
+pip install geopandas shapely networkx h3 rasterio pyproj psycopg2-binary sqlalchemy geoalchemy2 numpy pandas
 ```
 
-### Step 2: Database Initialization & Ingestion
+### Step 2: Database password (never stored in code)
+The scripts read the password from the environment variable `DB_PASSWORD`. Set it in the same terminal window before running them:
 ```bash
-# Copy environment template
-cp .env.example .env
-# Edit .env with your local credentials
-
-# Ingest raw OSM data, clean geometries, and project to UTM Zone 43N
-python analysis/01_clean_and_load.py
-
-# Generate clipped DEM elevation surface
-python analysis/02_dem_generator.py
-
-# Run network isochrone & H3 hexagonal accessibility analysis
-python analysis/03_isochrones_and_h3.py
-
-# Export client GeoJSON and vector datasets
-python analysis/04_export_client_data.py
+# Windows cmd (no spaces around "="):   set DB_PASSWORD=yourpassword
+# Linux/macOS:                          export DB_PASSWORD=yourpassword
 ```
 
-### Step 3: Launch Local Docker Stack
+### Step 3: Data and analysis
 ```bash
-docker compose up -d
+python analysis/00_download_osm.py       # 16 tiles into data/osm_tile_*.osm
+python analysis/00b_merge_osm.py         # writes data/raw_osm_buffered.osm
+python analysis/01_clean_and_load.py     # loads PostGIS
+python analysis/03_isochrones_and_h3.py  # network analysis, H3, Q6-Q8
+python analysis/04_export_client_data.py # GeoJSON for the web client
 ```
-* **PostGIS**: `localhost:5432`
-* **GeoServer**: `http://localhost:8080/geoserver`
-* **pg_tileserv**: `http://localhost:7800`
-* **pg_featureserv**: `http://localhost:9000`
+The raw OSM files are large and are listed in `.gitignore`; regenerate them with the first two commands.
 
-### Step 4: Run with Kubernetes (`kind`)
+### Step 4: SQL evidence
 ```bash
-kind create cluster --name webgis-cluster
-kubectl apply -f k8s/01_secrets.yaml
-kubectl apply -f k8s/02_postgis_statefulset.yaml
-kubectl apply -f k8s/03_client_deployment.yaml
-
-# Port forward the client
-kubectl port-forward svc/webgis-client-service 8080:80
+psql -U postgres -h localhost -d proximity -f sql/02_q1_area_comparisons.sql
+psql -U postgres -h localhost -d proximity -f sql/03_q2_indexing_and_explain.sql
+psql -U postgres -h localhost -d proximity -f sql/04_q3_data_quality.sql
 ```
+
+### Optional (not run by the author)
+`docker compose up -d` (GeoServer, pg_tileserv, pg_featureserv) and the manifests in `k8s/` are provided but have not been tested in this project.
 
 ---
 
 ## 4. Debugging Log
 
-### Issue 1: PROJ Version Mismatch & EPSG Definition Failure
-* **Symptom**: During DEM generation with `rasterio`, the script crashed with:
-  ```text
-  rasterio.errors.CRSError: The EPSG code is unknown. PROJ: proj_create_from_database: 
-  C:\Program Files\PostgreSQL\17\share\contrib\postgis-3.6\proj\proj.db contains 
-  DATABASE.LAYOUT.VERSION.MINOR = 2 whereas a number >= 6 is expected. 
-  It comes from another PROJ installation.
-  ```
-* **Root Cause**: Windows environment variables allowed the PROJ library embedded in `rasterio` to read the legacy `proj.db` from the local PostgreSQL 17 directory instead of the `pyproj` package directory.
-* **Fix**: Added explicit Python configuration to force PROJ to use `pyproj`'s bundled data directory prior to importing `rasterio`:
+### Issue 1: PROJ database mismatch
+* **Symptom**: `rasterio.errors.CRSError: The EPSG code is unknown ... proj.db contains DATABASE.LAYOUT.VERSION.MINOR = 2 whereas a number >= 6 is expected.`
+* **Cause**: PROJ inside `rasterio` was reading the `proj.db` shipped with the local PostgreSQL install instead of the one in `pyproj`.
+* **Fix**: point PROJ at `pyproj`'s data before importing `rasterio`:
   ```python
   import os, pyproj
   os.environ['PROJ_DATA'] = pyproj.datadir.get_data_dir()
   os.environ['PROJ_LIB'] = pyproj.datadir.get_data_dir()
   ```
 
-### Issue 2: Overpass Public Mirror Timeouts & White-Listing Block
-* **Symptom**: OSMnx feature queries to `overpass-api.de` stalled with `ReadTimeoutError`, and `overpass.openstreetmap.fr` responded with `403 Forbidden This service is only available to white-listed usages`.
-* **Root Cause**: Public Overpass interpreters enforce aggressive throttling and IP blacklisting during heavy requests.
-* **Fix**: Built a robust ingestion pipeline fetching raw OSM XML directly from the authoritative OpenStreetMap API (`https://api.openstreetmap.org/api/0.6/map?bbox=...`) using customized headers. Saved raw XML locally (`data/raw_osm_navrangpura.osm`, 11.8 MB) and wrote an XML parser to extract buildings, highways, and amenities cleanly and reproducibly without external API fragility.
+### Issue 2: Overpass mirrors timing out or refusing
+* **Symptom**: `overpass-api.de` timed out and `overpass.openstreetmap.fr` returned `403 Forbidden`.
+* **Fix**: download raw XML from the OpenStreetMap API (`/api/0.6/map?bbox=...`) instead and parse it locally.
 
-### Issue 3: Invalidation of GiST Spatial Index via Scalar Comparison
-* **Symptom**: Querying buildings within 500m took 39 ms with `ST_DWithin`, but rewriting the predicate as `ST_Distance(a, b) < 500` spiked execution time to 301 ms.
-* **Root Cause**: PostgreSQL's query optimizer only recognizes geometric operators (`&&`, `ST_DWithin`, `<->`) for GiST R-tree bounding box expansion. A scalar `<` operator forces a complete Cartesian scan.
-* **Fix**: Documented in study note `S2` and `ANSWERS.md` Q2 that all proximity thresholds must use `ST_DWithin` on projected metric geometries.
+### Issue 3: OSM API limit of 50,000 nodes per request
+* **Symptom**: a single request for the whole study area is refused when it contains too many nodes.
+* **Fix**: `00_download_osm.py` splits the area into a 4 × 4 grid of tiles with a pause between requests, and `00b_merge_osm.py` merges them, removing duplicate nodes and ways by id (178,424 nodes in the merged file).
+
+### Issue 4: `ST_Distance < 500` is slow
+* **Symptom**: the same 500 m query took 400 ms with `ST_DWithin` and about 9.7 s as `ST_Distance(a, b) < 500`.
+* **Cause**: only `ST_DWithin` (and the `&&` operator) can use the GiST index; the planner cannot see a bounding box inside a comparison on `ST_Distance`.
+* **Fix**: use `ST_DWithin` for every distance threshold (see Q2 in `ANSWERS.md`).
+
+### Issue 5: "Without index" comparison was not actually without an index
+* **Symptom**: the first plan of the Q2 script still showed `Index Scan using idx_buildings_utm`.
+* **Cause**: the script dropped indexes named `idx_buildings_geom_utm` and `idx_services_geom_utm`, but `01_clean_and_load.py` had created `idx_buildings_utm` and `idx_services_clean_utm`.
+* **Fix**: the script now drops both sets of names. The corrected run shows a sequential scan at 8.7 s versus 0.4 s with the index.
+
+### Issue 6: Network analysis too slow
+* **Symptom**: running one shortest-path search for every pair of hexagon and service was impractical on the larger network.
+* **Fix**: one multi-source Dijkstra search from all services at once (a temporary super-source node joined to each service node), then a lookup per hexagon or point. When two services share a street node the smaller snap distance is kept; without that, the results differed by up to 6 m during testing.
+
+### Issue 7: Misleading "worst-served cell"
+* **Symptom**: the cell with the longest network distance was 4.2 km from care, although a hospital was 131 m away in a straight line.
+* **Cause**: each hexagon is represented by its centre point; centres on the river edge connect to the street network only through long detours. These cells hold almost no people.
+* **Fix**: "worst-served" is now defined as the cell beyond 1200 m with the most people (805 people at 1,252 m), and the river-edge effect is documented as a limitation.
+
+### Issue 8: Windows `set` with a space
+* **Symptom**: `password authentication failed` even though the password was right.
+* **Cause**: `set DB_PASSWORD= pass` (space after `=`) stores a leading space in the value.
+* **Fix**: `set DB_PASSWORD=pass`.
 
 ---
 
 ## 5. Sources and References
-1. **OpenStreetMap Foundation**: Raw geospatial data under Open Database License (ODbL).
-2. **PostGIS Documentation**: Spatial Indexing and Query Tuning (PostGIS 3.4 manual).
-3. **Open Geospatial Consortium (OGC)**: WMS 1.3.0 (OGC 06-042), WFS 2.0 (OGC 09-025r2), and OGC API – Features specifications.
-4. **Uber H3**: Hexagonal Hierarchical Spatial Indexing System documentation (`https://h3geo.org`).
-5. **OSMnx**: Boeing, G. (2017). *OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks*. Computers, Environment and Urban Systems, 65, 126-139.
-6. **MapLibre GL JS & PMTiles**: MapLibre Foundation and Protomaps specification.
+1. **OpenStreetMap contributors**: data under the Open Database License (ODbL).
+2. **PostGIS documentation**: spatial indexing and query planning.
+3. **Open Geospatial Consortium**: WMS 1.3.0 (OGC 06-042), WFS 2.0 (OGC 09-025r2).
+4. **Uber H3**: hexagonal hierarchical spatial index, `https://h3geo.org`.
+5. **NetworkX**: Hagberg, Schult and Swart (2008), graph analysis in Python.
+6. **MapLibre GL JS** and **PMTiles** specifications.
