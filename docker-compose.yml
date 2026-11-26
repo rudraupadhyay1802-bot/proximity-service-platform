@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgis:
     image: postgis/postgis:16-3.4-alpine
@@ -9,10 +7,9 @@ services:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./sql:/docker-entrypoint-initdb.d
     networks:
       - webgis_network
     healthcheck:
@@ -33,11 +30,17 @@ services:
       INITIAL_MEMORY: "1G"
       MAXIMUM_MEMORY: "2G"
     ports:
-      - "8080:8080"
+      - "8081:8080"
     volumes:
       - geoserver_data:/opt/geoserver/data_dir
     networks:
       - webgis_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/geoserver/web/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
 
   pg_tileserv:
     image: pramsey/pg_tileserv:latest

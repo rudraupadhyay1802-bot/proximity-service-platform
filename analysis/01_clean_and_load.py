@@ -58,7 +58,7 @@ print("Study area loaded successfully.")
 
 # Parse raw OSM XML
 print("3. Parsing raw OSM data...")
-tree = ET.parse('data/raw_osm_navrangpura.osm')
+tree = ET.parse('data/raw_osm_buffered.osm')
 root = tree.getroot()
 
 nodes_dict = {}
@@ -148,7 +148,7 @@ for w in root.findall('way'):
     if 'highway' in tags:
         hw = tags.get('highway')
         # Pedestrian walkable highways
-        if hw in {'footway', 'pedestrian', 'path', 'residential', 'living_street', 'service', 'tertiary', 'secondary', 'primary', 'track', 'steps'}:
+        if hw in {'footway', 'pedestrian', 'path', 'residential', 'living_street', 'service', 'tertiary', 'secondary', 'primary', 'track', 'steps', 'unclassified', 'primary_link', 'secondary_link', 'tertiary_link', 'trunk', 'trunk_link', 'cycleway'}:
             if len(coords) >= 2:
                 try:
                     line = LineString(coords)

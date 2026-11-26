@@ -93,6 +93,22 @@ for idx, row in gdf_services.iterrows():
     node = get_nearest_node(pt_utm)
     service_nodes.append((row['id'], row['name'], pt_utm, node))
 
+# One shortest-path search that starts from ALL facilities at once.
+# Each facility is joined to a temporary node SUPER; the edge weight is the
+# distance from the facility to its nearest street node.
+SUPER = 'ALL_SERVICES'
+for s in service_nodes:
+    snap = Point(s[3]).distance(s[2])
+    if G.has_edge(SUPER, s[3]):
+        if snap < G[SUPER][s[3]]['weight']:
+            G[SUPER][s[3]]['weight'] = snap
+    else:
+        G.add_edge(SUPER, s[3], weight=snap)
+
+dist_from_service = nx.single_source_dijkstra_path_length(G, SUPER, weight='weight')
+G.remove_node(SUPER)
+print("Distances computed to", len(dist_from_service), "street nodes.")
+
 # 3. Generate H3 hexagons covering the study area
 print("3. Generating H3 grids at Resolution 8 and Resolution 9...")
 
@@ -133,6 +149,7 @@ print("4. Computing distances and population proxy for H3 cells...")
 
 def analyze_hexes(gdf_hex, target_table):
     results = []
+    fallback_count = 0
     for idx, row in gdf_hex.iterrows():
         c_utm = row['center_utm']
         hex_poly_utm = row['geom_utm']
@@ -141,29 +158,13 @@ def analyze_hexes(gdf_hex, target_table):
         straight_dists = [c_utm.distance(s[2]) for s in service_nodes]
         min_straight = float(min(straight_dists))
         
-        # Network distance to nearest service
+        # Network distance to nearest service, looked up from the single search above
         c_node = get_nearest_node(c_utm)
-        min_net = float('inf')
-        
-        # Check Dijkstra path to services within 2.5km straight-line
-        candidate_services = [s for s, d in zip(service_nodes, straight_dists) if d <= 2500]
-        if not candidate_services:
-            candidate_services = sorted(zip(service_nodes, straight_dists), key=lambda x: x[1])[:5]
-            candidate_services = [s[0] for s in candidate_services]
-            
-        for s in candidate_services:
-            s_node = s[3]
-            try:
-                d_net = nx.shortest_path_length(G, source=c_node, target=s_node, weight='weight')
-                # Add terminal snapping distances
-                d_total = d_net + Point(c_node).distance(c_utm) + Point(s_node).distance(s[2])
-                if d_total < min_net:
-                    min_net = d_total
-            except (nx.NetworkXNoPath, nx.NodeNotFound):
-                pass
-                
-        if min_net == float('inf'):
-            min_net = min_straight * 1.35  # Fallback approximation for disconnected island
+        if c_node in dist_from_service:
+            min_net = dist_from_service[c_node] + Point(c_node).distance(c_utm)
+        else:
+            min_net = min_straight * 1.35  # Fallback: street node not connected to any facility
+            fallback_count = fallback_count + 1
             
         # Population proxy: building footprint area intersecting hexagon
         # Estimate ~0.04 people per sq meter of building footprint in Ahmedabad (high density residential/commercial)
@@ -190,6 +191,7 @@ def analyze_hexes(gdf_hex, target_table):
             served_elderly
         ))
         
+    print("Cells using the straight-line fallback:", fallback_count)
     cur.execute(f"TRUNCATE TABLE {target_table};")
     execute_values(cur, f"""
         INSERT INTO {target_table} (
@@ -236,17 +238,15 @@ for i, pt in enumerate(random_points):
     s_dists = [(s[0], s[1], pt.distance(s[2])) for s in service_nodes]
     s_nearest = min(s_dists, key=lambda x: x[2])
     
-    # Nearest network
+    # Nearest network: one search from the point, then look up every facility
     pt_node = get_nearest_node(pt)
+    d_all = nx.single_source_dijkstra_path_length(G, pt_node, weight='weight')
     n_dists = []
     for s in service_nodes:
         s_node = s[3]
-        try:
-            d_net = nx.shortest_path_length(G, source=pt_node, target=s_node, weight='weight')
-            total_net = d_net + Point(pt_node).distance(pt) + Point(s_node).distance(s[2])
+        if s_node in d_all:
+            total_net = d_all[s_node] + Point(pt_node).distance(pt) + Point(s_node).distance(s[2])
             n_dists.append((s[0], s[1], total_net))
-        except (nx.NetworkXNoPath, nx.NodeNotFound):
-            pass
             
     if n_dists:
         n_nearest = min(n_dists, key=lambda x: x[2])
@@ -306,9 +306,9 @@ pct_unserved_net_r8 = (unserved_pop_net_r8 / total_pop_r8) * 100
 avg_ward_net = df_res9['network_dist_m'].mean()
 ward_unserved = 0.0 if avg_ward_net <= 1200 else 100.0
 
-# Worst-served populated H3 cell
-df_populated = df_res9[df_res9['est_population'] > 10.0]
-worst_cell = df_populated.loc[df_populated['network_dist_m'].idxmax()]
+# Largest unserved group: the cell beyond 1200 m with the most people
+df_unserved = df_res9[df_res9['network_dist_m'] > 1200.0]
+worst_cell = df_unserved.loc[df_unserved['est_population'].idxmax()]
 
 print(f"Share of population beyond 15-min walking threshold:")
 print(f"  - By Street Network: {pct_unserved_net_r9:.2f}%")

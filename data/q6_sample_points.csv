@@ -1,31 +1,31 @@
 point_id,pt_utm_x,pt_utm_y,straight_id,straight_name,straight_dist_m,network_id,network_name,network_dist_m,different_service,ratio
-1,250036.29,2550127.58,113,,99.78,54,Pramukh Neurosurgical Hosptial,193.6,True,1.94
-2,247835.37,2548338.57,46,"Bavishi Eye Hospital, Ahmedabad",342.63,14,Dr Sanjay Gandhi Hospital,484.07,True,1.413
-3,250798.07,2551307.41,9,Navkar Surgical Hospital,355.09,9,Navkar Surgical Hospital,423.65,False,1.193
-4,249091.59,2551575.06,28,"Jaydeep Hospital, Ahmedabad",708.62,28,"Jaydeep Hospital, Ahmedabad",965.36,False,1.362
-5,250961.66,2548421.12,39,Sparsh Orthopedic Oncology Clinic,267.53,39,Sparsh Orthopedic Oncology Clinic,405.19,False,1.515
-6,250206.93,2549148.09,21,Navneet Memorial Hospital,193.44,21,Navneet Memorial Hospital,325.03,False,1.68
-7,248527.41,2551090.94,27,Kaizen Hospital,339.66,27,Kaizen Hospital,435.67,False,1.283
-8,248083.86,2550274.96,5,sunflower infertility clinic,405.78,19,Arpan Newborncare Centre,723.13,True,1.782
-9,250995.26,2548807.92,20,Dr. Dilip Modi Hospital,135.4,20,Dr. Dilip Modi Hospital,796.69,False,5.884
-10,250798.2,2549890.93,7,"Jagmohan Hospital, Ahmedabad",71.12,7,"Jagmohan Hospital, Ahmedabad",119.81,False,1.685
-11,247925.63,2548187.74,46,"Bavishi Eye Hospital, Ahmedabad",166.94,11,Saumya Children Hospital and Neonatal Care Center,469.69,True,2.814
-12,248550.3,2552026.43,27,Kaizen Hospital,1218.11,23,Livewell Pain & Spine Hospital,1650.33,True,1.355
-13,250055.54,2550163.99,113,,117.96,54,Pramukh Neurosurgical Hosptial,157.36,True,1.334
-14,251021.54,2549998.92,85,Dr J J Vora Memorial General Hospital,166.33,85,Dr J J Vora Memorial General Hospital,237.56,False,1.428
-15,251825.97,2551190.97,33,"Aalok Hospital, Ahmedabad",706.05,95,Urban Health Centre,1281.74,True,1.815
-16,249524.77,2549170.91,24,"Centre For Sight, Ahmedabad",88.72,24,"Centre For Sight, Ahmedabad",291.01,False,3.28
-17,251609.21,2551291.18,33,"Aalok Hospital, Ahmedabad",574.32,33,"Aalok Hospital, Ahmedabad",1177.75,False,2.051
-18,250134.46,2551704.4,89,Shreyas Dental Hospital,762.14,36,Kheteswar Medical Educational and Research Centre Hospital,1172.93,True,1.539
-19,248145.14,2548030.77,11,Saumya Children Hospital and Neonatal Care Center,53.46,11,Saumya Children Hospital and Neonatal Care Center,68.59,False,1.283
-20,250871.28,2551561.02,9,Navkar Surgical Hospital,617.36,62,Patel E.N.T Hospital,1036.47,True,1.679
-21,248426.67,2548804.94,88,Amdawad Eye Laser Hospitals Pvt Ltd,164.97,88,Amdawad Eye Laser Hospitals Pvt Ltd,318.1,False,1.928
-22,250740.39,2548306.22,37,Stavya Spine Hospital and Research Institute,237.68,37,Stavya Spine Hospital and Research Institute,583.41,False,2.455
-23,250870.66,2549755.42,7,"Jagmohan Hospital, Ahmedabad",136.45,7,"Jagmohan Hospital, Ahmedabad",235.57,False,1.726
-24,250777.32,2549907.43,7,"Jagmohan Hospital, Ahmedabad",77.58,7,"Jagmohan Hospital, Ahmedabad",97.02,False,1.251
-25,247902.68,2548573.5,14,Dr Sanjay Gandhi Hospital,143.77,14,Dr Sanjay Gandhi Hospital,194.1,False,1.35
-26,250301.56,2548109.59,64,Amardeep Multispeciality Children Hospital,284.73,13,Niyati Ent Hospital,691.69,True,2.429
-27,249962.85,2548188.37,13,Niyati Ent Hospital,380.91,13,Niyati Ent Hospital,536.13,False,1.407
-28,247945.14,2548368.85,6,Planet Women Fertility and Counseling,292.78,14,Dr Sanjay Gandhi Hospital,341.68,True,1.167
-29,249702.36,2551503.23,87,Bhadra Clinic Hospital,674.12,43,Aarogyam Speciality Hospital,853.85,True,1.267
-30,251988.85,2549712.99,90,Munciapl Prasuti Hospital,23.07,100,muncipal parsuti Hospital,70.8,True,3.069
+1,250036.29,2550127.58,343,,99.78,235,Pramukh Neurosurgical Hosptial,193.6,True,1.94
+2,247835.37,2548338.57,8,Jyoti Maternity Hospital,263.9,98,Dr Sanjay Gandhi Hospital,484.07,True,1.834
+3,250798.07,2551307.41,230,Shah Hospital - Vadaj,204.83,230,Shah Hospital - Vadaj,238.79,False,1.166
+4,249091.59,2551575.06,206,Mother's Maternity and Nursing Home,242.55,206,Mother's Maternity and Nursing Home,652.93,False,2.692
+5,250961.66,2548421.12,127,Sparsh Orthopedic Oncology Clinic,267.53,127,Sparsh Orthopedic Oncology Clinic,405.19,False,1.515
+6,250206.93,2549148.09,124,Navneet Memorial Hospital,193.44,124,Navneet Memorial Hospital,325.03,False,1.68
+7,248527.41,2551090.94,202,Kaizen Hospital,339.66,202,Kaizen Hospital,435.67,False,1.283
+8,248083.86,2550274.96,166,sunflower infertility clinic,405.78,198,Arpan Newborncare Centre,723.13,True,1.782
+9,250995.26,2548807.92,123,Dr. Dilip Modi Hospital,135.4,123,Dr. Dilip Modi Hospital,796.69,False,5.884
+10,250798.2,2549890.93,217,"Jagmohan Hospital, Ahmedabad",71.12,217,"Jagmohan Hospital, Ahmedabad",119.81,False,1.685
+11,247925.63,2548187.74,13,"Bavishi Eye Hospital, Ahmedabad",166.94,5,Saumya Children Hospital and Neonatal Care Center,469.69,True,2.814
+12,248550.3,2552026.43,288,Hina Maternity Nursing Home,137.29,288,Hina Maternity Nursing Home,162.32,False,1.182
+13,250055.54,2550163.99,343,,117.96,235,Pramukh Neurosurgical Hosptial,157.36,True,1.334
+14,251021.54,2549998.92,245,Dr J J Vora Memorial General Hospital,166.33,245,Dr J J Vora Memorial General Hospital,253.14,False,1.522
+15,251825.97,2551190.97,260,Sagar Multi Speciality Hospital,420.57,260,Sagar Multi Speciality Hospital,951.6,False,2.263
+16,249524.77,2549170.91,112,"Centre For Sight, Ahmedabad",88.72,112,"Centre For Sight, Ahmedabad",291.01,False,3.28
+17,251609.21,2551291.18,311,Harsh Neurosurgical Hospital,480.49,328,Ami Eye Clinic,2215.27,True,4.61
+18,250134.46,2551704.4,229,Shail Eye Hospital,332.33,229,Shail Eye Hospital,434.29,False,1.307
+19,248145.14,2548030.77,5,Saumya Children Hospital and Neonatal Care Center,53.46,5,Saumya Children Hospital and Neonatal Care Center,68.59,False,1.283
+20,250871.28,2551561.02,230,Shah Hospital - Vadaj,205.15,230,Shah Hospital - Vadaj,468.18,False,2.282
+21,248426.67,2548804.94,119,Amdawad Eye Laser Hospitals Pvt Ltd,164.97,119,Amdawad Eye Laser Hospitals Pvt Ltd,318.1,False,1.928
+22,250740.39,2548306.22,126,Stavya Spine Hospital and Research Institute,237.68,126,Stavya Spine Hospital and Research Institute,583.41,False,2.455
+23,250870.66,2549755.42,217,"Jagmohan Hospital, Ahmedabad",136.45,217,"Jagmohan Hospital, Ahmedabad",235.57,False,1.726
+24,250777.32,2549907.43,217,"Jagmohan Hospital, Ahmedabad",77.58,217,"Jagmohan Hospital, Ahmedabad",97.02,False,1.251
+25,247902.68,2548573.5,98,Dr Sanjay Gandhi Hospital,143.77,98,Dr Sanjay Gandhi Hospital,194.1,False,1.35
+26,250301.56,2548109.59,75,Amardeep Multispeciality Children Hospital,284.73,65,Dr.Santosh C.Raibagkar,628.59,True,2.208
+27,249962.85,2548188.37,65,Dr.Santosh C.Raibagkar,376.79,65,Dr.Santosh C.Raibagkar,473.03,False,1.255
+28,247945.14,2548368.85,111,Planet Women Fertility and Counseling,292.78,98,Dr Sanjay Gandhi Hospital,341.68,True,1.167
+29,249702.36,2551503.23,201,Usha - Deep Hospital and Nursing Home,292.2,201,Usha - Deep Hospital and Nursing Home,410.43,False,1.405
+30,251988.85,2549712.99,150,Munciapl Prasuti Hospital,23.07,158,muncipal parsuti Hospital,70.8,True,3.069

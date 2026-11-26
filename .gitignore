@@ -24,3 +24,6 @@ Thumbs.db
 
 data/osm_tile_*.osm
 data/raw_osm_buffered.osm
+
+proximity.sql
+proximity_clean.sql
