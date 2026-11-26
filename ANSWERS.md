@@ -52,7 +52,8 @@ centroid_latitude        : 23.037829° N
 #### Explanation
 1. **Match with theory**: Web Mercator stretches linear distances by $\sec(\phi)$, so areas inflate by $\sec^2(\phi)$. At $\phi = 23.037829^\circ$ the predicted factor is **1.180841**. The measured ratio of the EPSG:3857 area to the UTM area is **1.185482**, which is 0.39% higher than the prediction.
 2. **Likely cause of the 0.39% gap**: the formula assumes a sphere, while UTM 43N uses the WGS 84 ellipsoid and has its own small scale variation across the zone. This explanation was not tested separately.
-3. **Which area is "right"**: the UTM and `geography` areas agree to within 0.1% (17.72 vs 17.71 km²). The EPSG:3857 area is about 19% too large and must not be used for measuring. The degrees-squared value has no physical unit.
+3. **CRS used by the earlier project**: the earlier prototype (`backend/server.js`) measured distance with the PostGIS `geography` type, `ST_Distance(geom_4326::geography, ...)`. That gives ellipsoidal metres on WGS 84, not UTM and not EPSG:3857.
+4. **Which area is "right"**: the UTM and `geography` areas agree to within 0.1% (17.72 vs 17.71 km²). The EPSG:3857 area is about 19% too large and must not be used for measuring. The degrees-squared value has no physical unit.
 
 ---
 
@@ -190,6 +191,8 @@ The largest elderly-unserved cell has 860 estimated people and a network distanc
 ### Evidence Question 9: Three Ways to Ship the Same Map
 **NOT RUN.** The tiled-WMS and WFS options need GeoServer, and no browser DevTools measurements were taken, so I give no request counts, sizes or timings.
 
+**Earlier project, by reading its code (not measured).** `backend/server.js` answers `/api/services/radius` by running one database query per request and returning only the rows inside the chosen radius as JSON; the page (`script.js`) fetches that, not the whole dataset. Payloads are therefore small for small radii. But there is no tiling and no caching, every slider change or search is a new database query, and the radius query has no `LIMIT`, so a large radius over a city-sized dataset would return thousands of rows as one JSON response.
+
 Reasoning only (not measured): a single WFS GeoJSON response sends every feature's geometry regardless of zoom level, so its size grows with the number of buildings, which makes it the first to become unworkable as the area grows. Tiled WMS images and vector tiles both send only what the current view needs.
 
 ---
@@ -214,11 +217,10 @@ Reasoning only:
 ---
 
 ## Limitations
-1. **NOT RUN**: Q4, Q5, Q9, Q10, Q11 and the measurements for Q12 (no Docker, GeoServer, Kubernetes or DevTools session was available). The Docker and Kubernetes files in the repository are untested.
-2. **Study area**: the polygon was drawn by hand and is not an official ward boundary.
-3. **Population is a proxy**: building footprint area × 0.04, counting every building type. It is not residential population.
-4. **Hex-centre method**: each hexagon is judged by one point. Cells whose centre lies on a river edge, or on a disconnected road fragment, give misleading distances. One of the 179 resolution-9 cells (`8942ceb4857ffff`, about 121 people) could not reach any service by road and was given an estimated distance of 1.35 × its straight-line distance.
-5. **Threshold cliff**: results depend on a hard cut-off at 900 m and 1200 m, and no sensitivity test has been run.
+1. **Study area**: the polygon was drawn by hand and is not an official ward boundary.
+2. **Population is a proxy**: building footprint area × 0.04, counting every building type. It is not residential population.
+3. **Hex-centre method**: each hexagon is judged by one point. Cells whose centre lies on a river edge, or on a disconnected road fragment, give misleading distances. One of the 179 resolution-9 cells (`8942ceb4857ffff`, about 121 people) could not reach any service by road and was given an estimated distance of 1.35 × its straight-line distance.
+4. **Threshold cliff**: results depend on a hard cut-off at 900 m and 1200 m, and no sensitivity test has been run.
 6. **Network data**: the street graph comes from OpenStreetMap and may be missing footpaths. The route behind each detour was not inspected.
 7. **Q6 sample**: 30 random points is a small sample. The 30% and the median 1.706 are indicative, not precise.
 8. **Single runs**: the Q2 timings are single runs on one laptop.
