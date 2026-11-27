@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Q9 Buildings Test</title>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <style>
+    body { margin: 0; }
+    #map { position: absolute; inset: 0; }
+    #info { position: absolute; top: 8px; left: 8px; background: #fff; padding: 6px 10px; font: 14px monospace; z-index: 1; }
+  </style>
+</head>
+<body>
+<div id="info"></div>
+<div id="map"></div>
+<script>
+  // Usage: q9_test.html?mode=wms|wfs|mvt&z=12|14|16
+  const p = new URLSearchParams(location.search);
+  const mode = p.get('mode') || 'mvt';
+  const z = Number(p.get('z') || 14);
+  document.getElementById('info').textContent = `mode=${mode}  zoom=${z}`;
+
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: { version: 8, sources: {}, layers: [
+      { id: 'bg', type: 'background', paint: { 'background-color': '#f2f2f2' } }
+    ]},
+    center: [72.5599, 23.0381],
+    zoom: z,
+    interactive: false
+  });
+  window.map = map;
+
+  map.on('load', async () => {
+    const t0 = performance.now();
+
+    if (mode === 'wms') {
+      map.addSource('b', { type: 'raster', tileSize: 256, tiles: [
+        'http://localhost:8081/geoserver/webgis/wms?service=WMS&version=1.1.1&request=GetMap' +
+        '&layers=webgis:buildings&styles=&format=image/png&transparent=true' +
+        '&srs=EPSG:3857&width=256&height=256&bbox={bbox-epsg-3857}'
+      ]});
+      map.addLayer({ id: 'b', type: 'raster', source: 'b' });
+    }
+
+    if (mode === 'wfs') {
+      const url = 'http://localhost:8081/geoserver/webgis/wfs?service=WFS&version=2.0.0' +
+        '&request=GetFeature&typeNames=webgis:buildings&outputFormat=application/json&srsName=EPSG:4326';
+      const data = await (await fetch(url)).json();
+      map.addSource('b', { type: 'geojson', data });
+      map.addLayer({ id: 'b', type: 'fill', source: 'b', paint: { 'fill-color': '#333' } });
+    }
+
+    if (mode === 'mvt') {
+      map.addSource('b', { type: 'vector',
+        tiles: ['http://localhost:7800/public.buildings/{z}/{x}/{y}.pbf'] });
+      map.addLayer({ id: 'b', type: 'fill', source: 'b',
+        'source-layer': 'public.buildings', paint: { 'fill-color': '#333' } });
+    }
+
+    map.once('idle', () => {
+      document.getElementById('info').textContent +=
+        `  rendered in ${Math.round(performance.now() - t0)} ms`;
+    });
+  });
+</script>
+</body>
+</html>
