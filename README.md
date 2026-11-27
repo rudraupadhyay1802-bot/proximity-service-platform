@@ -9,7 +9,7 @@ This project rebuilds an earlier local nearby-services prototype into a Web GIS 
 
 ### Key Facts
 * **Study area**: hand-drawn polygon, 17.72 km², approximating Navrangpura Ward, West Zone, Ahmedabad. It is not an official boundary.
-* **Services analysed**: 345 healthcare features from OpenStreetMap (`hospital`, `clinic`, `pharmacy`, `healthcare=*`).
+* **Services analysed**: 345 healthcare features from OpenStreetMap (`hospital`, `clinic`, `pharmacy`, `healthcare=*`): **156 inside the study polygon**, the rest in a ≈1.2 km download margin (the brief asks for 2 km) so that edge residents can reach services just outside.
 * **Buildings**: 20,607 footprints. **Walking network**: 7,607 OSM ways → a graph of 35,008 nodes and 38,916 edges.
 * **Coordinate systems**: WGS 84 (EPSG:4326) for storage and GPS, UTM Zone 43N (EPSG:32643) for distances and areas, Web Mercator (EPSG:3857) for display only.
 * **Network analysis**: one multi-source Dijkstra search (NetworkX) from all services at once gives the street-network distance from every road node to its nearest service.
@@ -22,7 +22,13 @@ This project rebuilds an earlier local nearby-services prototype into a Web GIS 
 * In 9 of 30 random points (30%), the nearest service on foot is not the nearest in a straight line. The median walking route is 1.71× the straight-line distance.
 * The unserved share depends on the grid: 0.0% for the ward as one unit, 7.95% at H3 resolution 8, 2.10% at resolution 9.
 
-Details, caveats and the questions I could not run are in [`ANSWERS.md`](ANSWERS.md).
+### Service and Deployment Findings
+* **Tile delivery (Q9, buildings, zoom 14)**: MVT from pg_tileserv 6 requests / 469 kB / 1.8 s; WMS PNG 16 / 535 kB / 5.8 s; one WFS GeoJSON 1 / 2,297 kB (13 MB decoded) / 9.9 s.
+* **Static site (Q12)**: hexes and services are served from one PMTiles file on GitHub Pages using HTTP Range requests (`206 Partial Content`), with no tile server.
+* **Containers (Q10)**: the multi-stage client image is 83.6 MB against 1.6 GB single-stage.
+* **Kubernetes (Q11)**: the PostGIS pod recovered in about 2 s and kept its data with a PersistentVolumeClaim; with `emptyDir` the data was lost.
+
+Details and caveats are in [`ANSWERS.md`](ANSWERS.md).
 
 ### Status
 | Part | Status |
@@ -30,11 +36,13 @@ Details, caveats and the questions I could not run are in [`ANSWERS.md`](ANSWERS
 | OSM download, cleaning, PostGIS load | Done and run |
 | Network analysis, H3 aggregation, Q6–Q8 | Done and run |
 | SQL evidence (Q1–Q3) | Done and run |
-| Static map client (MapLibre) | Included |
-| Docker Compose stack, GeoServer, WMS/WFS (Q4, Q5) | Files included, **not run** |
-| Docker image builds (Q10) | Dockerfiles included, **not built** |
-| Kubernetes manifests (Q11) | Included, **not applied** |
-| Browser performance measurements (Q9, Q12) | **Not measured** |
+| Map client (MapLibre, PMTiles), deployed to GitHub Pages | Done, live |
+| Docker Compose stack, GeoServer WMS/WFS (Q4, Q5) | Done and run |
+| Performance comparison (Q9) | Measured at zoom 14 only |
+| Docker image builds (Q10) | Built and measured |
+| Kubernetes on kind (Q11) | Applied and tested |
+| PMTiles Range requests on the live site (Q12) | Measured |
+| DEM layer with SLD in GeoServer | Not done; the DEM layer only works against a local GeoServer |
 
 ---
 
@@ -43,7 +51,7 @@ Details, caveats and the questions I could not run are in [`ANSWERS.md`](ANSWERS
 .
 ├── README.md
 ├── ANSWERS.md                    # Evidence questions Q1–Q12, with limitations
-├── docker-compose.yml            # PostGIS, GeoServer, pg_tileserv, pg_featureserv (not run)
+├── docker-compose.yml            # PostGIS, GeoServer, pg_tileserv, pg_featureserv
 ├── .env.example                  # Variable names only, no secrets
 ├── .gitignore
 ├── backend/                      # Earlier Node/Express prototype (kept for comparison)
@@ -58,8 +66,8 @@ Details, caveats and the questions I could not run are in [`ANSWERS.md`](ANSWERS
 │   ├── 03_isochrones_and_h3.py   # Network distances, H3 cells, Q6–Q8
 │   ├── 04_export_client_data.py  # Exports GeoJSON for the web client
 │   └── 05_build_pmtiles.py
-├── client/                       # MapLibre GL JS client, Dockerfiles, nginx.conf
-├── k8s/                          # Kubernetes manifests (not applied)
+├── client/                       # MapLibre client, q9_test.html, PMTiles, Dockerfiles, nginx.conf
+├── k8s/                          # Kubernetes manifests (tested on kind)
 └── .github/workflows/deploy.yml  # GitHub Pages deployment
 ```
 
@@ -104,8 +112,32 @@ psql -U postgres -h localhost -d proximity -f sql/03_q2_indexing_and_explain.sql
 psql -U postgres -h localhost -d proximity -f sql/04_q3_data_quality.sql
 ```
 
-### Optional (not run by the author)
-`docker compose up -d` (GeoServer, pg_tileserv, pg_featureserv) and the manifests in `k8s/` are provided but have not been tested in this project.
+### Step 5: Service stack (Docker Compose)
+```bash
+docker compose up -d
+```
+| Service | URL |
+| :--- | :--- |
+| GeoServer (workspace `webgis`, layers `services_wgs84`, `buildings`) | http://localhost:8081/geoserver |
+| pg_tileserv | http://localhost:7800 |
+| pg_featureserv | http://localhost:9000 |
+| PostGIS | localhost:5433 |
+
+Q9 test page: `cd client && python -m http.server 8000`, then open `http://localhost:8000/q9_test.html?mode=wms|wfs|mvt&z=14`.
+
+### Step 6: PMTiles for the static site
+```bash
+docker run --rm -v "%cd%\client\data:/data" tippecanoe-local tippecanoe -o /data/proximity_tiles.pmtiles -zg --force --no-feature-limit --no-tile-size-limit -L services:/data/services.geojson -L hex:/data/hex_access_res9.geojson
+```
+Buildings are deliberately left out: with them, tippecanoe dropped features at zooms 11–12.
+
+### Step 7: Images and Kubernetes
+```bash
+docker build -t webgis-client:multi client
+docker build -t webgis-client:single -f client/Dockerfile.single client
+kind create cluster
+kubectl apply -f k8s/
+```
 
 ---
 
@@ -152,6 +184,25 @@ psql -U postgres -h localhost -d proximity -f sql/04_q3_data_quality.sql
 * **Symptom**: `password authentication failed` even though the password was right.
 * **Cause**: `set DB_PASSWORD= pass` (space after `=`) stores a leading space in the value.
 * **Fix**: `set DB_PASSWORD=pass`.
+
+### Issue 9: GeoServer layer with two geometry columns
+* **Symptom**: the services layer published from `services` used the wrong geometry column.
+* **Fix**: publish a `services_wgs84` table with a single EPSG:4326 geometry.
+
+### Issue 10: Q9 "feature type unknown"
+* **Symptom**: `Feature type webgis:buildings_wgs84 unknown` / `LayerNotDefined`.
+* **Cause**: buildings had never been published in GeoServer.
+* **Fix**: publish `webgis:buildings` (single 4326 geometry, so no view needed); WFS then returned `numberMatched="20607"`.
+
+### Issue 11: tippecanoe dropping features
+* **Symptom**: "keeping the sparsest 68%" at zooms 11–12.
+* **Cause**: the 20,607 buildings made those tiles exceed the size limit.
+* **Fix**: build the PMTiles with only services and hexes (524 features) plus `--no-feature-limit --no-tile-size-limit`.
+
+### Issue 12: PMTiles errors on the local Python server
+* **Symptom**: `Server returned no content-length header ... HTTP Byte Serving`.
+* **Cause**: `python -m http.server` does not handle Range requests properly.
+* **Fix**: none needed; GitHub Pages supports byte serving (`Accept-Ranges: bytes`, status 206).
 
 ---
 
